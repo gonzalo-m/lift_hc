@@ -14,7 +14,6 @@
 #define RIGHT_PROP_FANS  10
 #define RIGHT_PROP_SERVO 11
 
-
 void setup() {
   /* set 
 }
