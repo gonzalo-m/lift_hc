@@ -1,7 +1,8 @@
-/* Light sensor pins */
+/* Sensor pins */
 #define LEFT_LIGHT_SENSOR A0
 #define CENTER_LIGHT_SENSOR A1
 #define RIGHT_LIGHT_SENSOR A2
+#define PROXIMITY_SENSOR 4
 
 /* Motors PWM pins */
 #define LEVITATION_FAN 3
@@ -9,7 +10,10 @@
 #define CENTER_PROP_FAN 9
 #define RIGHT_PROP_FANS 10
 
+// Threshold values
 #define LIGHT_SENS_THRESHOLD 60
+#define NEAR_PEDESTAL_THRESHOLD 9  // inches
+#define AT_PEDESTAL_THRESHOLD 3
 
 /* Power percentages */
 #define _PERCENT_100 255
@@ -66,42 +70,35 @@ void loop() {
     if (isPedestalNear()) {
       // go at slower speed
       levitate(_PERCENT_100);
-      leftPropeller(_PERCENT_80);
-      centerPropeller(_PERCENT_80);
-      rightPropeller(_PERCENT_80);
+      controlPropellers(_PERCENT_80, _PERCENT_80, _PERCENT_80);
       if (isTargetReached()) {
         // enable jibboom :)
-        
+        enablePayloadSystem();
       }
     } else {
       // go at regular speed
       levitate(_PERCENT_100);
-      leftPropeller(_PERCENT_100);
-      centerPropeller(_PERCENT_100);
-      rightPropeller(_PERCENT_100);
+      controlPropellers(_PERCENT_100, _PERCENT_100, _PERCENT_100);
     }
+    previousState = state;
     Serial.println("center");
       break;
       
     case LEFT_AND_CENTER_DETECTING_LINE:
     // left + center sensors detecting line
     // rotate CCW slightly
-    previousState = state;
     levitate(_PERCENT_100);
-    leftPropeller(_PERCENT_50);
-    centerPropeller(_PERCENT_100);
-    rightPropeller(_PERCENT_100);
+    controlPropellers(_PERCENT_50, _PERCENT_100, _PERCENT_100);
+    previousState = state;
     Serial.println("left + center");
       break;
       
     case RIGHT_AND_CENTER_DETECTING_LINE:
     // right + center sensors detecting line
     // rotate CW slightly
-    previousState = state;
     levitate(_PERCENT_100);
-    leftPropeller(_PERCENT_100);
-    centerPropeller(_PERCENT_100);
-    rightPropeller(_PERCENT_50);
+    controlPropellers(_PERCENT_100, _PERCENT_100, _PERCENT_50);
+    previousState = state;
     Serial.println("right + center");
       break;
       
@@ -109,9 +106,7 @@ void loop() {
     // left sensor detecting line
     // a more severe case, rotate CCW cosiderably
     levitate(_PERCENT_100);
-    leftPropeller(_PERCENT_20);
-    centerPropeller(_PERCENT_50);
-    rightPropeller(_PERCENT_100);
+    controlPropellers(_PERCENT_20, _PERCENT_50, _PERCENT_100);
     previousState = state;
     Serial.println("left");
       break;
@@ -120,9 +115,7 @@ void loop() {
     // right sensor detetcting line
     // a more severe case, rotate CW cosiderably
     levitate(_PERCENT_100);
-    leftPropeller(_PERCENT_100);
-    centerPropeller(_PERCENT_50);
-    rightPropeller(_PERCENT_20);
+    controlPropellers(_PERCENT_100, _PERCENT_50, _PERCENT_20);
     previousState = state;
     Serial.println("right");
      break;
@@ -131,9 +124,8 @@ void loop() {
     // left + right sensors detecting line
     // unlikely to happen, but go forward slowly
     levitate(_PERCENT_100);
-    leftPropeller(_PERCENT_80);
-    centerPropeller(_PERCENT_80);
-    rightPropeller(_PERCENT_80);
+    controlPropellers(_PERCENT_80, _PERCENT_80, _PERCENT_80);
+    previousState = state;
     Serial.println("left + right");
       break;
       
@@ -141,9 +133,7 @@ void loop() {
     // left + center + right sensor detecting line
     // less likely to happen, but go forward slowly
     levitate(_PERCENT_100);
-    leftPropeller(_PERCENT_80);
-    centerPropeller(_PERCENT_80);
-    rightPropeller(_PERCENT_80);
+    controlPropellers(_PERCENT_80, _PERCENT_80, _PERCENT_80);
     previousState = state;
     Serial.println("left + center + right");
       break;
@@ -154,9 +144,7 @@ void loop() {
       // hovercraft hasn't started the course
       // start levitating and go forward slowly
       levitate(_PERCENT_100);
-      leftPropeller(_PERCENT_80);
-      centerPropeller(_PERCENT_80);
-      rightPropeller(_PERCENT_80);
+      controlPropellers(_PERCENT_80, _PERCENT_80, _PERCENT_80);
     } else {
       // hovercraft already started the course and is lost
       // so go back to previous state
@@ -201,21 +189,58 @@ void levitate(int powLevel) {
   analogWrite(LEVITATION_FAN, powLevel);
 }
 
-void leftPropeller(int powLevel) {
-  analogWrite(LEFT_PROP_FANS, powLevel);
+void controlPropellers(int leftPowLevel, int centerPowLevel, int rightPowLevel) {
+  analogWrite(LEFT_PROP_FANS, leftPowLevel);
+  analogWrite(CENTER_PROP_FAN, centerPowLevel);
+  analogWrite(RIGHT_PROP_FANS, rightPowLevel);
 }
 
-void centerPropeller(int powLevel) {
-  analogWrite(CENTER_PROP_FAN, powLevel);
+boolean isPedestalNear() {
+  return getDistance() < NEAR_PEDESTAL_THRESHOLD;
 }
 
-void rightPropeller(int powLevel) {
-  analogWrite(RIGHT_PROP_FANS, powLevel);
+long getDistance() {
+  // establish variables for duration of the ping, 
+  // and the distance result in inches and centimeters:
+  long duration, inches;
+
+  // The PING))) is triggered by a HIGH pulse of 2 or more microseconds.
+  // Give a short LOW pulse beforehand to ensure a clean HIGH pulse:
+  pinMode(PROXIMITY_SENSOR, OUTPUT);
+  digitalWrite(PROXIMITY_SENSOR, LOW);
+  delayMicroseconds(2);
+  digitalWrite(PROXIMITY_SENSOR, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(PROXIMITY_SENSOR, LOW);
+
+  // The same pin is used to read the signal from the PING))): a HIGH
+  // pulse whose duration is the time (in microseconds) from the sending
+  // of the ping to the reception of its echo off of an object.
+  pinMode(PROXIMITY_SENSOR, INPUT);
+  duration = pulseIn(PROXIMITY_SENSOR, HIGH);
+
+  // convert the time into a distance
+  inches = microsecondsToInches(duration);
+  return inches;
 }
 
-int isPedestalNear() {
-  // in inches
-  int distance = 
+long microsecondsToInches(long microseconds)
+{
+  // According to Parallax's datasheet for the PING))), there are
+  // 73.746 microseconds per inch (i.e. sound travels at 1130 feet per
+  // second).  This gives the distance travelled by the ping, outbound
+  // and return, so we divide by 2 to get the distance of the obstacle.
+  // See: http://www.parallax.com/dl/docs/prod/acc/28015-PING-v1.3.pdf
+  return microseconds / 74 / 2;
+}
+
+boolean isTargetReached() {
+  return getDistance() < AT_PEDESTAL_THRESHOLD;
+}
+
+void enablePayloadSystem() {
+ // TO BE IMPLEMENTED 
+}
 
 void setPWMPins() {
   pinMode(LEVITATION_FAN, OUTPUT);
