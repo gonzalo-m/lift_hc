@@ -24,6 +24,32 @@
 #define _PERCENT_10 26
 #define _PERCENT_0 0
 
+//               HOVERCRAFT VIEW
+//          |\                     /|
+//          | \                   / |
+//          |  \-----------------/  |
+//          |   |  *         *  |   |
+//          |---|-------*-------|---|
+//          |                       |
+//          |                       |
+//          |                       |
+//          |left      LEV     right|
+//          |prop      FAN     prop |
+//          |fans              fans |
+//          |                       |
+//          |                       |
+//          |          cent         |
+//          |          fan          |
+//           -----------------------
+ 
+enum State{
+  LEFT_DETECTS_LINE = 2, CENTER_DETECTS_LINE = 3, RIGHT_DETECTS_LINE = 5,
+  LEFT_AND_CENTER_DETECT_LINE = 6, LEFT_AND_RIGHT_DETECT_LINE = 10,
+  CENTER_AND_RIGHT_DETECT_LINE = 15,
+  LEFT_CENTER_AND_RIGHT_DETECT_LINE = 30,
+
+};
+
 void setup() {
   Serial.begin(9600);
   setPWMPins();
@@ -33,7 +59,7 @@ void loop() {
   static int previousState = 0;
   int state = checkState();
   switch (state) { 
-    case 2:
+    case State.LEFT_DETECT_LINE:
     // left sensor detecting line
     // a more severe case, rotate CCW cosiderably
     levitate(_PERCENT_100);
