@@ -4,14 +4,18 @@
 #define RIGHT_LIGHT_SENSOR A2
 #define PROXIMITY_SENSOR 4
 
-/* Motors PWM pins */
+/* Fans PWM odd pins */
 #define LEVITATION_FAN 3
 #define LEFT_PROP_FANS 5
 #define CENTER_PROP_FAN 9
-#define RIGHT_PROP_FANS 10
+#define RIGHT_PROP_FANS 11
+
+/* Servos PWM even pins */
+#define LEFT_SERVO 6
+#define RIGHT_SERVO 10
 
 // Threshold values
-#define LIGHT_SENS_THRESHOLD 60
+#define LIGHT_SENS_THRESHOLD 70
 #define NEAR_PEDESTAL_THRESHOLD 9  // inches
 #define AT_PEDESTAL_THRESHOLD 3
 
@@ -28,7 +32,7 @@
 #define _PERCENT_10  26
 #define _PERCENT_0   0
 
-//               HOVERCRAFT VIEW
+//             HOVERCRAFT TOP VIEW
 //          |\                     /|
 //          | \                   / |
 //          |  \-----------------/  |
@@ -67,19 +71,19 @@ void loop() {
     case CENTER_DETECTING_LINE:
     // center sensor detecting line
     // go forward
-    if (isPedestalNear()) {
-      // go at slower speed
-      levitate(_PERCENT_100);
-      controlPropellers(_PERCENT_80, _PERCENT_80, _PERCENT_80);
-      if (isTargetReached()) {
-        // enable jibboom :)
-        enablePayloadSystem();
-      }
-    } else {
+//    if (isPedestalNear()) {
+//      // go at slower speed
+//      levitate(_PERCENT_100);
+//      controlPropellers(_PERCENT_80, _PERCENT_80, _PERCENT_80);
+//      if (isTargetReached()) {
+//        // enable jibboom :)
+//        enablePayloadSystem();
+//      }
+//    } else {
       // go at regular speed
       levitate(_PERCENT_100);
       controlPropellers(_PERCENT_100, _PERCENT_100, _PERCENT_100);
-    }
+//    }
     previousState = state;
     Serial.println("center");
       break;
@@ -154,7 +158,7 @@ void loop() {
     Serial.println(previousState);
       break;
   }
-  delay(50);
+  delay(300);
 }
 
 int checkState() {
@@ -195,9 +199,9 @@ void controlPropellers(int leftPowLevel, int centerPowLevel, int rightPowLevel) 
   analogWrite(RIGHT_PROP_FANS, rightPowLevel);
 }
 
-boolean isPedestalNear() {
-  return getDistance() < NEAR_PEDESTAL_THRESHOLD;
-}
+//boolean isPedestalNear() {
+//  return getDistance() < NEAR_PEDESTAL_THRESHOLD;
+//}
 
 long getDistance() {
   // establish variables for duration of the ping, 
@@ -234,9 +238,9 @@ long microsecondsToInches(long microseconds)
   return microseconds / 74 / 2;
 }
 
-boolean isTargetReached() {
-  return getDistance() < AT_PEDESTAL_THRESHOLD;
-}
+//boolean isTargetReached() {
+//  return getDistance() < AT_PEDESTAL_THRESHOLD;
+//}
 
 void enablePayloadSystem() {
  // TO BE IMPLEMENTED 
