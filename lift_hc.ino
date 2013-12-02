@@ -101,9 +101,6 @@ void loop() {
     controlPropellers(_PERCENT_0, _PERCENT_50);
     previousState = state;
     Serial.println("left + center");
-    if (isPedestalNear()) {
-      enterDeliveryMode();
-    }
       break;
       
     case RIGHT_AND_CENTER_DETECTING_LINE:
@@ -115,9 +112,6 @@ void loop() {
     controlPropellers(_PERCENT_50, _PERCENT_0);
     previousState = state;
     Serial.println("right + center");
-    if (isPedestalNear()) {
-      enterDeliveryMode();
-    }
       break;
       
     case LEFT_DETECTING_LINE:
@@ -266,10 +260,6 @@ long microsecondsToInches(long microseconds)
 
 boolean isPedestalNear() {
   return getDistance() < NEAR_PEDESTAL_THRESHOLD;
-}
-
-void enterDeliveryMode() {
- 
 }
 
 boolean isTargetReached() {
