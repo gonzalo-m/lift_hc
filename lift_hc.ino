@@ -10,8 +10,8 @@
 #define RIGHT_PROP_FANS 11
 
 /* Payload PWM even pins */
-#define PAYLOAD_SELECTOR 6
-#define PAYLOAD_DROP 10
+#define BIN_SELECTOR 6
+#define DROP_MOTOR 10
 
 /* Threshold values */
 #define LIGHT_SENS_THRESHOLD 50
@@ -73,15 +73,18 @@ void loop() {
      * go forward
      */
     if (isPedestalNear()) {
-      // go at slower speed
+      /* go at lower speed */
+      delay(2000);
       levitate(_PERCENT_100);
       controlPropellers(_PERCENT_30, _PERCENT_30);
       if (isTargetReached()) {
-        // enable jibboom :)
-        enablePayloadSystem();
+        levitate(_PERCENT_0);
+        controlPropellers(_PERCENT_0, _PERCENT_0);
+        delay(2000);  /* wait 2 sec */
+        /* enable jibboom :) */
+        enablePayload();
       }
     } else {
-      /* go at regular speed */
       levitate(_PERCENT_100);
       controlPropellers(_PERCENT_50, _PERCENT_50);
     }
@@ -98,6 +101,9 @@ void loop() {
     controlPropellers(_PERCENT_0, _PERCENT_50);
     previousState = state;
     Serial.println("left + center");
+    if (isPedestalNear()) {
+      enterDeliveryMode();
+    }
       break;
       
     case RIGHT_AND_CENTER_DETECTING_LINE:
@@ -109,6 +115,9 @@ void loop() {
     controlPropellers(_PERCENT_50, _PERCENT_0);
     previousState = state;
     Serial.println("right + center");
+    if (isPedestalNear()) {
+      enterDeliveryMode();
+    }
       break;
       
     case LEFT_DETECTING_LINE:
@@ -255,15 +264,19 @@ long microsecondsToInches(long microseconds)
   return microseconds / 74 / 2;
 }
 
-boolean isTargetReached() {
-  return getDistance() < AT_PEDESTAL_THRESHOLD;
-}
-
 boolean isPedestalNear() {
   return getDistance() < NEAR_PEDESTAL_THRESHOLD;
 }
 
-void enablePayloadSystem() {
+void enterDeliveryMode() {
+ 
+}
+
+boolean isTargetReached() {
+  return getDistance() < AT_PEDESTAL_THRESHOLD;
+}
+
+void enablePayload() {
  // TO BE IMPLEMENTED 
 }
 
@@ -321,9 +334,23 @@ void goBackToPreviousState(int previousState) {
       break;
       
     case LEFT_AND_RIGHT_DETECTING_LINE:
+    /* power up left fan */
+    levitate(_PERCENT_100);
+    controlPropellers(_PERCENT_50, _PERCENT_0);
+    delay(TIME_OFF);
+    /* power down left fan */
+    levitate(_PERCENT_0);
+    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
       
     case LEFT_CENTER_AND_RIGHT_DETECTING_LINE:
+    /* power up leftt fan */
+    levitate(_PERCENT_100);
+    controlPropellers(_PERCENT_50, _PERCENT_0);
+    delay(TIME_OFF);
+    /* power down leftt fan */
+    levitate(_PERCENT_0);
+    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
     }
 }
