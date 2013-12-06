@@ -1,25 +1,25 @@
 /* Sensor pins */
-#define LEFT_LIGHT_SENSOR A0
+#define   LEFT_LIGHT_SENSOR A0
 #define CENTER_LIGHT_SENSOR A1
-#define RIGHT_LIGHT_SENSOR A2
-#define PROXIMITY_SENSOR 4
+#define  RIGHT_LIGHT_SENSOR A2
+#define     PROXIMITY_SENSOR 4
 
 /* Fans PWM odd pins */
-#define LEVITATION_FAN 3
-#define LEFT_PROP_FANS 5
+#define   LEVITATION_FAN 3
+#define   LEFT_PROP_FANS 5
 #define RIGHT_PROP_FANS 11
 
 /* Payload PWM even pins */
 #define BIN_SELECTOR 6
-#define DROP_MOTOR 10
+#define  DROP_MOTOR 10
 
 /* Threshold values */
-#define LIGHT_SENS_THRESHOLD 50
+#define   LIGHT_SENS_THRESHOLD 58
 #define NEAR_PEDESTAL_THRESHOLD 9  // inches
-#define AT_PEDESTAL_THRESHOLD 3 // inches
+#define   AT_PEDESTAL_THRESHOLD 3 // inches
 
 /* Power percentages to control fans */
-#define _PERCENT_100 255
+#define _PERCENT_100 230
 #define _PERCENT_90  230
 #define _PERCENT_80  204
 #define _PERCENT_70  179
@@ -72,22 +72,23 @@ void loop() {
     /* center sensor detecting line
      * go forward
      */
-    if (isPedestalNear()) {
-      /* go at lower speed */
-      delay(2000);
+//    if (isPedestalNear()) {
+//      /* go at lower speed */
+//      delay(2000);
+//      levitate(_PERCENT_100);
+//      controlPropellers(_PERCENT_30, _PERCENT_30);
+//      if (isTargetReached()) {
+//        levitate(_PERCENT_0);
+//        controlPropellers(_PERCENT_0, _PERCENT_0);
+//        delay(2000);  /* wait 2 sec */
+//        /* enable jibboom :) */
+//        Serial.println("Enabling payload");
+//        enablePayload();
+//      }
+//    } else {
       levitate(_PERCENT_100);
-      controlPropellers(_PERCENT_30, _PERCENT_30);
-      if (isTargetReached()) {
-        levitate(_PERCENT_0);
-        controlPropellers(_PERCENT_0, _PERCENT_0);
-        delay(2000);  /* wait 2 sec */
-        /* enable jibboom :) */
-        enablePayload();
-      }
-    } else {
-      levitate(_PERCENT_100);
-      controlPropellers(_PERCENT_50, _PERCENT_50);
-    }
+      controlPropellers(_PERCENT_60, _PERCENT_50);
+//    }
     previousState = state;
     Serial.println("center");
       break;
@@ -118,9 +119,12 @@ void loop() {
     /* left sensor detecting line
      * a more severe case, rotate CCW cosiderably
      */
+    //levitate(_PERCENT_0);
+    controlPropellers(_PERCENT_0, _PERCENT_50);
+    delay(300);
     levitate(_PERCENT_100);
     /* more power on the right fan */
-    controlPropellers(_PERCENT_0, _PERCENT_80);
+    
     previousState = state;
     Serial.println("left");
       break;
@@ -129,9 +133,13 @@ void loop() {
     /* right sensor detetcting line
      * a more severe case, rotate CW cosiderably
      */
-    levitate(_PERCENT_100);
+    //levitate(_PERCENT_0);
     /* more power on the left fan */
-    controlPropellers(_PERCENT_80, _PERCENT_0);
+    controlPropellers(_PERCENT_50, _PERCENT_0);
+    delay(300);
+    levitate(_PERCENT_100);
+    
+    
     previousState = state;
     Serial.println("right");
      break;
@@ -163,6 +171,7 @@ void loop() {
       /* hovercraft hasn't started the course
        * start levitating and go forward slowly
        */
+      Serial.println("========== I'm starting  ==========");
       levitate(_PERCENT_100);
       controlPropellers(_PERCENT_50, _PERCENT_50);
     } else {
@@ -170,12 +179,13 @@ void loop() {
        * so go back to previous state
        */
        goBackToPreviousState(previousState);
+       Serial.println("========== I'm lost, need to go back to previous state ==========");
     }
-    Serial.print("none, previous state:");
+    Serial.print("none of the sensors detetcted the line - previous state:");
     Serial.println(previousState);
       break;
   }
-  delay(100);
+  delay(50);
 }
 
 int checkState() {
@@ -271,7 +281,7 @@ void enablePayload() {
 }
 
 void goBackToPreviousState(int previousState) {  
-  int TIME_OFF = 500;
+  int TIME_OFF = 0;
   switch(previousState) {
     case LEFT_DETECTING_LINE:
     /* power up right fan */
@@ -279,8 +289,8 @@ void goBackToPreviousState(int previousState) {
     controlPropellers(_PERCENT_0, _PERCENT_50);
     delay(TIME_OFF);
     /* power down right fan */
-    levitate(_PERCENT_0);
-    controlPropellers(_PERCENT_0, _PERCENT_0);
+//    levitate(_PERCENT_0);
+//    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
     
     case RIGHT_DETECTING_LINE:
@@ -289,8 +299,8 @@ void goBackToPreviousState(int previousState) {
     controlPropellers(_PERCENT_50, _PERCENT_0);
     delay(TIME_OFF);
     /* power down left fan */
-    levitate(_PERCENT_0);
-    controlPropellers(_PERCENT_0, _PERCENT_0);
+//    levitate(_PERCENT_0);
+//    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
       
     case CENTER_DETECTING_LINE:
@@ -299,8 +309,8 @@ void goBackToPreviousState(int previousState) {
     controlPropellers(_PERCENT_50, _PERCENT_0);
     delay(TIME_OFF);
     /* power down left fan */
-    levitate(_PERCENT_0);
-    controlPropellers(_PERCENT_0, _PERCENT_0);
+//    levitate(_PERCENT_0);
+//    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
       
     case LEFT_AND_CENTER_DETECTING_LINE:
@@ -309,8 +319,8 @@ void goBackToPreviousState(int previousState) {
     controlPropellers(_PERCENT_0, _PERCENT_50);
     delay(TIME_OFF);
     /* power down right fan */
-    levitate(_PERCENT_0);
-    controlPropellers(_PERCENT_0, _PERCENT_0);
+//    levitate(_PERCENT_0);
+//    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
       
     case RIGHT_AND_CENTER_DETECTING_LINE:
@@ -329,8 +339,8 @@ void goBackToPreviousState(int previousState) {
     controlPropellers(_PERCENT_50, _PERCENT_0);
     delay(TIME_OFF);
     /* power down left fan */
-    levitate(_PERCENT_0);
-    controlPropellers(_PERCENT_0, _PERCENT_0);
+//    levitate(_PERCENT_0);
+//    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
       
     case LEFT_CENTER_AND_RIGHT_DETECTING_LINE:
@@ -339,8 +349,8 @@ void goBackToPreviousState(int previousState) {
     controlPropellers(_PERCENT_50, _PERCENT_0);
     delay(TIME_OFF);
     /* power down leftt fan */
-    levitate(_PERCENT_0);
-    controlPropellers(_PERCENT_0, _PERCENT_0);
+//    levitate(_PERCENT_0);
+//    controlPropellers(_PERCENT_0, _PERCENT_0);
       break;
     }
 }
