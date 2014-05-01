@@ -1,2 +1,2 @@
-lift_hc
+Team Lift's Arduino Code and Schematics
 =======
