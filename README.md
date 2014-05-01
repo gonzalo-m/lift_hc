@@ -1,2 +1,1 @@
-Team Lift's Arduino Code and Schematics
-=======
+Team Lift's Arduino Code and Schematics.
